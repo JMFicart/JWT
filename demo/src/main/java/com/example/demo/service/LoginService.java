@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.demo.config.JwtProperties;
 import com.example.demo.models.form.LoginForm;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,9 +15,11 @@ import java.util.Date;
 @Service
 public class LoginService {
     private final AuthenticationManager authManager;
+    private final JwtProperties properties;
 
-    public LoginService(AuthenticationManager authManager) {
+    public LoginService(AuthenticationManager authManager, JwtProperties properties, JwtProperties jwtProperties) {
         this.authManager = authManager;
+        this.properties = jwtProperties;
     }
 
     public String login(LoginForm form) {
@@ -25,8 +28,8 @@ public class LoginService {
         return JWT.create()
                 .withSubject(form.getUsername())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 86_400_000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + properties.getExpires()))
                 .withClaim("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
-                .sign(Algorithm.HMAC512("m0N_Sup3r_C0d3_S3creT"));
+                .sign(Algorithm.HMAC512(properties.getSecret()));
     }
 }
