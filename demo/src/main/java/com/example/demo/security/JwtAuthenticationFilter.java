@@ -29,15 +29,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = request.getHeader("Authorization").substring(7);
+        String token = request.getHeader(properties.getHeader());
 
         if (token != null) {
+            token = token.replace(properties.getPrefix(),"");
             try {
                 DecodedJWT jwt = JWT.require(Algorithm.HMAC512(properties.getSecret()))
                         .build()
                         .verify(token);
 
-                // le toke ne doit pas avoir expiré
+                // le token ne doit pas avoir expiré
                 if (jwt.getExpiresAt() != null && jwt.getExpiresAt().after(new Date())) {
                     Authentication auth = new UsernamePasswordAuthenticationToken(
                             jwt.getSubject(),
@@ -53,8 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
             catch (JWTVerificationException ignored){}
-
-            filterChain.doFilter(request, response);
         }
+
+        filterChain.doFilter(request, response);
     }
 }
